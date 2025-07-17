@@ -3,7 +3,7 @@
 pipeline {
     // agent any
     agent {
-        label 'slave_moe'
+        label 'slave_moe_repo'
     }
 
     environment {
