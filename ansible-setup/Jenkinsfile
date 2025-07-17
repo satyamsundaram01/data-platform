@@ -118,9 +118,9 @@ pipeline {
                             cd ${ANSIBLE_SETUP_ROOT}/dp-instance-ansible
 
                             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \\
-                            -i ${ANSIBLE_SETUP_ROOT}/dp-instance-ansible/inventory/hosts.ini \\
+                            -i inventory/hosts.ini \\
                             --private-key \$ANSIBLE_SSH_KEY_FILE \\
-                            ${ANSIBLE_SETUP_ROOT}/dp-instance-ansible/playbooks/initial_setup.yml \\
+                            playbooks/initial_setup.yml \\
                             --limit all --check --diff
                         """
                     }
@@ -132,7 +132,7 @@ pipeline {
             steps {
                 script {
                     echo "Running cp-ansible/all.yml for Kafka and Zookeeper installation..."
-                    def cpAnsibleInventoryFile = "${ANSIBLE_SETUP_ROOT}/cp-ansible/prod-${AWS_REGION}/${SUBSERVICE_NAME}-hosts.yml"
+                    def cpAnsibleInventoryFile = "prod-${AWS_REGION}/${SUBSERVICE_NAME}-hosts.yml"
 
                     withCredentials([sshUserPrivateKey(credentialsId: AWS_EC2_SSH_KEY_CRED_ID, keyFileVariable: 'ANSIBLE_SSH_KEY_FILE')]) {
                         sh """
@@ -142,21 +142,21 @@ pipeline {
                             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \\
                             -i ${cpAnsibleInventoryFile} \\
                             --private-key \$ANSIBLE_SSH_KEY_FILE \\
-                            ${ANSIBLE_SETUP_ROOT}/cp-ansible/all.yml \\
+                            all.yml \\
                             --tags=zookeeper -e deployment_strategy=parallel --check --diff
 
                             echo "Running cp-ansible for Kafka Broker..."
                             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \\
                             -i ${cpAnsibleInventoryFile} \\
                             --private-key \$ANSIBLE_SSH_KEY_FILE \\
-                            ${ANSIBLE_SETUP_ROOT}/cp-ansible/all.yml \\
+                            all.yml \\
                             --tags=kafka_broker -e deployment_strategy=parallel --check --diff
 
                             echo "Running cp-ansible for Schema Registry (if applicable)..."
                             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \\
                             -i ${cpAnsibleInventoryFile} \\
                             --private-key \$ANSIBLE_SSH_KEY_FILE \\
-                            ${ANSIBLE_SETUP_ROOT}/cp-ansible/all.yml \\
+                            all.yml \\
                             --tags=schema_registry -e deployment_strategy=parallel --check --diff
                         """
                     }
@@ -173,9 +173,9 @@ pipeline {
                             cd ${ANSIBLE_SETUP_ROOT}/dp-instance-ansible
 
                             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \\
-                            -i ${ANSIBLE_SETUP_ROOT}/dp-instance-ansible/inventory/hosts.ini \\
+                            -i inventory/hosts.ini \\
                             --private-key \$ANSIBLE_SSH_KEY_FILE \\
-                            ${ANSIBLE_SETUP_ROOT}/dp-instance-ansible/playbooks/post_confluent_config.yml \\
+                            playbooks/post_confluent_config.yml \\
                             --limit all --check --diff
                         """
                     }
