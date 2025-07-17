@@ -26,7 +26,9 @@ pipeline {
             steps {
                 script {
                     echo "Cloning repository: ${env.REPO_NAME} into ${WORKSPACE}"
-                    git branch: 'main', credentialsId: GITHUB_REPO_CRED_ID, url: "git@github.com:satyamsundaram01/${REPO_NAME}.git"
+                    // git branch: 'main', credentialsId: GITHUB_REPO_CRED_ID, url: "git@github.com:satyamsundaram01/${REPO_NAME}.git"
+                    git branch: 'main', url: "https://github.com/satyamsundaram01/${REPO_NAME}.git"
+
                 }
             }
         }
