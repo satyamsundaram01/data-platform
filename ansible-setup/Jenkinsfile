@@ -44,11 +44,13 @@ pipeline {
                         # Ensure Python 3 and pip3 are installed (apt-get might install an older pip by default)
                         sudo apt-get install -y python3 python3-pip ansible
 
-                        # IMPORTANT: Upgrade pip3 to a recent version
-                        # Use python3 -m pip to ensure the correct pip for Python 3 is updated
-                        python3 -m pip install --upgrade pip
+                        # IMPORTANT: Upgrade pip3 to a recent version using sudo for system-wide permissions
+                        # This ensures pip itself is updated where system packages reside
+                        sudo python3 -m pip install --upgrade pip
 
-                        # sudo apt-get install -y python3-pip ansible
+                        # Now install the Python libraries. No sudo needed here, as pip is now up-to-date
+                        # and should respect user-level installations or the fact it was just upgraded system-wide.
+                        # If these *still* fail with permission errors, you might need --user, but try without first.
                         pip3 install boto3 PyYAML botocore
                     '''
                 }
