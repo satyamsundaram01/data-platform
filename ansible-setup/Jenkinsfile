@@ -40,11 +40,19 @@ pipeline {
                 script {
                     echo "Installing Python dependencies (boto3, PyYAML) and Ansible on Jenkins agent..."
                     sh '''
+                        # sudo apt-get update
+                        # sudo apt-get install -y python3-pip ansible
+                        # pip3 install boto3 PyYAML botocore
+
                         sudo apt-get update
-                        sudo apt-get install -y python3-pip ansible
-                        pip3 install boto3 PyYAML botocore
+                        sudo apt-get install -y python3-pip
+                        sudo apt-get remove --purge -y ansible || true
+                        python3 -m pip install --upgrade pip
+                        sudo python3 -m pip install ansible
+                        python3 -m pip install boto3 PyYAML botocore
 
                         # --- VERIFICATION STEPS (crucial for debugging in Jenkins logs) ---
+                        uname -a
                         echo "--- Python/Pip/Ansible Version Verification ---"
                         echo "python3 executable path:"
                         which python3
