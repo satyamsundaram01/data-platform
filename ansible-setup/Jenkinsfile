@@ -26,9 +26,12 @@ pipeline {
                     // git branch: 'main', credentialsId: "'github alice'", url: "git@github.com:satyamsundaram01/${REPO_NAME}.git"
                     // git branch: 'main', credentialsId: /github alice/, url: "git@github.com:satyamsundaram01/${REPO_NAME}.git"
                     git branch: 'main', url: "https://github.com/satyamsundaram01/${REPO_NAME}.git"
-                    ls "${WORKSPACE}"
-                    ls "${WORKSPACE}/${REPO_NAME}"
-                    ls "${WORKSPACE}/${REPO_NAME}/ansible-setup"
+                    pwd()
+                    // how to list files in the workspace
+                    echo "Listing files in workspace:"
+                    sh 'ls -la'
+                    echo "Listing files in ansible-setup directory:"
+                    sh "ls -la ${ANSIBLE_SETUP_ROOT}"
                 }
             }
         }
