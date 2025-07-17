@@ -27,6 +27,7 @@ pipeline {
                     // git branch: 'main', credentialsId: /github alice/, url: "git@github.com:satyamsundaram01/${REPO_NAME}.git"
                     git branch: 'main', url: "https://github.com/satyamsundaram01/${REPO_NAME}.git"
                     pwd()
+                    sh 'pwd'
                     // how to list files in the workspace
                     echo "Listing files in workspace:"
                     sh 'ls -la'
