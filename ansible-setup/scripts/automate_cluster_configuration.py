@@ -334,7 +334,7 @@ class ClusterInventoryGenerator:
             self.fetch_all_cluster_details()
             self.generate_dp_ansible_inventory()
             self.generate_cp_ansible_hosts_file()
-            self.create_route53_dns_records()
+            # self.create_route53_dns_records()
             self.tag_ec2_instances()
             print("\nAutomation completed successfully!")
         except Exception as e:
