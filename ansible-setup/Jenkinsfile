@@ -1,7 +1,10 @@
 // GitHub.com/moengage/data-platform/ansible-setup/jenkinsfile
 
 pipeline {
-    agent any
+    // agent any
+    agent {
+        label 'slave_moe'
+    }
 
     environment {
         // --- Pipeline Parameters (define in Jenkins UI as 'Parameters') ---

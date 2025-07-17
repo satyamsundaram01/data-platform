@@ -59,6 +59,8 @@ class ClusterInventoryGenerator:
         self.ec2_client = boto3.client('ec2', region_name=self.region)
         self.route53_client = boto3.client('route53', region_name=self.region)
 
+        print("Using Role: ", boto3.client('sts').get_caller_identity())
+
         self.kafka_instances = [] # Stores list of {'ip': ..., 'id': ..., 'name': ...}
         self.zookeeper_instances = [] # Stores list of {'ip': ..., 'id': ..., 'name': ...}
 
