@@ -1,0 +1,19 @@
+---
+- name: Configure Confluent Services Post-Installation
+  hosts: all # Or specific groups like 'kafka', 'zookeeper' if you want to limit
+  strategy: free
+  user: ubuntu # Ensure this matches your ansible_user
+  become: true
+  gather_facts: true # Ensure facts are gathered for service checks
+
+  tasks:
+    - name: Ensure systemd daemon is reloaded before attempting service config
+      ansible.builtin.systemd_service:
+        daemon_reload: yes
+
+    - name: Import confluent service configuration tasks
+      ansible.builtin.import_tasks: ../roles/dp-instance-setup/tasks/configure_confluent_services.yml
+      # This explicitly imports the tasks from the role, allowing it to be used in a standalone playbook.
+  
+  # Handlers are automatically picked up from roles/dp-instance-setup/handlers/main.yml
+  # (No need to list them explicitly here, Ansible finds them if they're in the role's handlers directory)

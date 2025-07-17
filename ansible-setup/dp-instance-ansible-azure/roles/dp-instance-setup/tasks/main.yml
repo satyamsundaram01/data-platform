@@ -1,0 +1,9 @@
+- name: Install node exporter
+  import_tasks: install_node_exporter.yml
+
+- name: Mount Disks
+  include_tasks: mount_disks.yml
+  loop: "{{ hostvars[inventory_hostname].disks }}"
+  loop_control:
+    extended: true
+  when: hostvars[inventory_hostname].mount_disks

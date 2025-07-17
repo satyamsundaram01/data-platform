@@ -1,0 +1,39 @@
+- name: create dir
+  command: mkdir -p easyssh
+
+- name: change the permision
+  command: chmod 777 easyssh
+
+- name: copy the install.sh script
+  copy: src=./install_graviton.sh dest=easyssh/install_graviton.sh  mode=0777
+
+- name: copy the configure.sh script
+  copy: src=./configure_graviton.sh dest=easyssh/configure_graviton.sh  mode=0777
+
+- name: Execute the install script
+  command: sudo easyssh/install_graviton.sh
+
+- name: Execute the configure script
+  command: sudo easyssh/configure_graviton.sh
+
+- name: sleep for 20 second
+  command: sleep 20s
+
+- name: Execute the configure script
+  command: sudo easyssh/configure_graviton.sh
+
+- name: sleep for 20 second
+  command: sleep 20s
+
+- name: Execute the configure script
+  command: sudo easyssh/configure_graviton.sh
+
+- name: determine if directory exists
+  shell: 'ls /etc/ssh/auth_principals/ubuntu'
+  register: out
+
+- debug: 
+    var: out.stdout_lines
+
+
+

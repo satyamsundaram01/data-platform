@@ -1,0 +1,23 @@
+- name: Reload systemd daemon
+  ansible.builtin.systemd_service:
+    daemon_reload: yes
+
+- name: Restart confluent-zookeeper service
+  ansible.builtin.systemd_service:
+    name: confluent-zookeeper
+    state: restarted
+
+- name: Restart node-exporter service
+  ansible.builtin.systemd_service:
+    name: node-exporter
+    state: restarted
+
+- name: Restart confluent-kafka service
+  ansible.builtin.systemd_service:
+    name: confluent-kafka
+    state: restarted
+
+- name: Restart confluent-schema-registry service
+  ansible.builtin.systemd_service:
+    name: confluent-schema-registry
+    state: restarted

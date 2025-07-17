@@ -1,0 +1,46 @@
+# ---
+# - hosts: all
+#   strategy: free
+#   user: ubuntu
+#   pre_tasks:
+#     - name: update apt
+#       raw: apt-get update
+#     - name: Install ntp
+#       raw: apt-get install -y ntp
+#     - action: setup
+#   become: yes
+#   gather_facts: false
+#   roles:
+#     - dp-instance-setup
+
+---
+- name: Initial Instance Setup (NTP, Disk Mount, Node Exporter)
+  hosts: all
+  strategy: free
+  user: ubuntu # Ensure this matches your ansible_user
+  become: true
+  gather_facts: false # Facts will be gathered explicitly if needed
+
+  pre_tasks:
+    - name: Ensure apt cache is updated
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600 # Update cache if older than 1 hour
+
+    - name: Install ntp and other common packages
+      ansible.builtin.apt:
+        name: ntp
+        state: present
+
+    - name: Ensure NTP service is running and enabled
+      ansible.builtin.systemd_service:
+        name: ntp
+        state: started
+        enabled: yes
+
+    - name: Gather facts for service checks (needed for schema registry condition later)
+      ansible.builtin.setup:
+        filter: "ansible_services" # Gather only service facts for efficiency
+    
+  roles:
+    - dp-instance-setup

@@ -1,0 +1,162 @@
+// GitHub.com/moengage/data-platform/ansible-setup/jenkinsfile
+
+pipeline {
+    agent any
+
+    environment {
+        // --- Pipeline Parameters (define in Jenkins UI as 'Parameters') ---
+        AWS_REGION = params.AWS_REGION // e.g., 'ap-south-1'
+        CLUSTER_SUBSERVICE_TAG = params.CLUSTER_SUBSERVICE_TAG // e.g., 'oneshot'
+        // ROUTE53_HOSTED_ZONE_ID will be derived, so it's no longer a direct parameter
+
+        // --- Internal Paths and Credentials IDs ---
+        REPO_NAME = 'data-platform'
+        ANSIBLE_SETUP_ROOT = "${WORKSPACE}/${REPO_NAME}/ansible-setup"
+
+        GITHUB_REPO_CRED_ID = 'your-github-repo-credential-id'
+        AWS_EC2_SSH_KEY_CRED_ID = 'aws-ec2-ssh-key'
+
+        // --- Dynamic Environment Variables ---
+        // Placeholder for the dynamically determined Hosted Zone ID
+        ROUTE53_HOSTED_ZONE_ID_FOR_REGION = ''
+    }
+
+    stages {
+        stage('Checkout Source Code') {
+            steps {
+                script {
+                    echo "Cloning repository: ${env.REPO_NAME} into ${WORKSPACE}"
+                    git branch: 'main', credentialsId: GITHUB_REPO_CRED_ID, url: "git@github.com:moengage/${REPO_NAME}.git"
+                }
+            }
+        }
+
+        stage('Setup Jenkins Agent Tools') {
+            steps {
+                script {
+                    echo "Installing Python dependencies (boto3, PyYAML) and Ansible on Jenkins agent..."
+                    sh '''
+                        sudo apt-get update
+                        sudo apt-get install -y python3-pip ansible
+                        pip3 install boto3 PyYAML botocore
+                    '''
+                }
+            }
+        }
+
+        stage('Determine Route 53 Hosted Zone ID') {
+            steps {
+                script {
+                    def hostedZoneMap = [
+                        'us-east-1': 'euqwuei32r329',
+                        'us-east-2': 'jkhdr328r2921j',
+                        'ap-south-1': '2h3yr282fyv22',
+                        'eu-central-1': 'kehf23y892yv2v2'
+                    ]
+
+                    if (hostedZoneMap.containsKey(env.AWS_REGION)) {
+                        env.ROUTE53_HOSTED_ZONE_ID_FOR_REGION = hostedZoneMap[env.AWS_REGION]
+                        echo "Determined Route 53 Hosted Zone ID for ${env.AWS_REGION}: ${env.ROUTE53_HOSTED_ZONE_ID_FOR_REGION}"
+                    } else {
+                        error "Unsupported AWS_REGION: ${env.AWS_REGION}. Please add its Hosted Zone ID to the map."
+                    }
+                }
+            }
+        }
+
+        stage('Generate Ansible Inventories & Configure AWS Resources') {
+            steps {
+                script {
+                    echo "Running automate_inventory.py script..."
+                    sh """
+                        python3 ${ANSIBLE_SETUP_ROOT}/scripts/automate_inventory.py \\
+                        --region ${AWS_REGION} \\
+                        --subservice ${CLUSTER_SUBSERVICE_TAG} \\
+                        --hosted-zone-id ${ROUTE53_HOSTED_ZONE_ID_FOR_REGION} # Pass the derived ID
+                    """
+                }
+            }
+        }
+
+        stage('Run dp-instance-ansible Initial Setup (NTP, Disks)') {
+            steps {
+                script {
+                    echo "Running dp-instance-ansible/playbooks/initial_setup.yml..."
+                    withCredentials([sshUserPrivateKey(credentialsId: AWS_EC2_SSH_KEY_CRED_ID, keyFileVariable: 'ANSIBLE_SSH_KEY_FILE')]) {
+                        sh """
+                            ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \\
+                            -i ${ANSIBLE_SETUP_ROOT}/dp-instance-ansible/inventory/hosts.ini \\
+                            --private-key \$ANSIBLE_SSH_KEY_FILE \\
+                            ${ANSIBLE_SETUP_ROOT}/dp-instance-ansible/playbooks/initial_setup.yml \\
+                            --limit all
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Run cp-ansible Playbook (Kafka/Zookeeper Installation)') {
+            steps {
+                script {
+                    echo "Running cp-ansible/all.yml for Kafka and Zookeeper installation..."
+                    def cpAnsibleInventoryFile = "${ANSIBLE_SETUP_ROOT}/cp-ansible/staging/${AWS_REGION}/${CLUSTER_SUBSERVICE_TAG}-hosts.yml"
+
+                    withCredentials([sshUserPrivateKey(credentialsId: AWS_EC2_SSH_KEY_CRED_ID, keyFileVariable: 'ANSIBLE_SSH_KEY_FILE')]) {
+                        sh """
+                            echo "Running cp-ansible for Zookeeper..."
+                            ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \\
+                            -i ${cpAnsibleInventoryFile} \\
+                            --private-key \$ANSIBLE_SSH_KEY_FILE \\
+                            ${ANSIBLE_SETUP_ROOT}/cp-ansible/all.yml \\
+                            --tags=zookeeper -e deployment_strategy=parallel
+
+                            echo "Running cp-ansible for Kafka Broker..."
+                            ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \\
+                            -i ${cpAnsibleInventoryFile} \\
+                            --private-key \$ANSIBLE_SSH_KEY_FILE \\
+                            ${ANSIBLE_SETUP_ROOT}/cp-ansible/all.yml \\
+                            --tags=kafka_broker -e deployment_strategy=parallel
+
+                            echo "Running cp-ansible for Schema Registry (if applicable)..."
+                            ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \\
+                            -i ${cpAnsibleInventoryFile} \\
+                            --private-key \$ANSIBLE_SSH_KEY_FILE \\
+                            ${ANSIBLE_SETUP_ROOT}/cp-ansible/all.yml \\
+                            --tags=schema_registry -e deployment_strategy=parallel
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Run dp-instance-ansible Post-Confluent Config') {
+            steps {
+                script {
+                    echo "Running dp-instance-ansible/playbooks/post_confluent_config.yml..."
+                    withCredentials([sshUserPrivateKey(credentialsId: AWS_EC2_SSH_KEY_CRED_ID, keyFileVariable: 'ANSIBLE_SSH_KEY_FILE')]) {
+                        sh """
+                            ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \\
+                            -i ${ANSIBLE_SETUP_ROOT}/dp-instance-ansible/inventory/hosts.ini \\
+                            --private-key \$ANSIBLE_SSH_KEY_FILE \\
+                            ${ANSIBLE_SETUP_ROOT}/dp-instance-ansible/playbooks/post_confluent_config.yml \\
+                            --limit all
+                        """
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline finished. Cleaning up workspace."
+            cleanWs()
+        }
+        success {
+            echo "Pipeline completed successfully!"
+        }
+        failure {
+            echo "Pipeline failed! Check logs for details."
+        }
+    }
+}

@@ -1,0 +1,33 @@
+- name: "Check data directory exists: disk = {{ item }}"
+  stat:
+    path: "/mnt/data/kafka-data{{ item }}"
+  become: yes
+  register: data_directory_check
+
+- name: "Make data directory : disk = {{ item }}"
+  file:
+    path: "/mnt/data/kafka-data{{ item }}"
+    owner: ubuntu
+    group: ubuntu
+    state: directory
+  become: yes
+  register: created_directories
+  when: data_directory_check.stat.exists == false
+
+- name: "Format filesystem to xfs : disk = {{ item }}"
+  filesystem:
+    fstype: xfs
+    dev: "/dev/nvme{{ item }}n1"
+    force: false
+    resizefs: true
+  become: yes
+  register: formatted_disks
+  when: created_directories.changed
+
+- name: "Mount volumes : disk = {{ item }}"
+  mount:
+    path: "/mnt/data/kafka-data{{ item }}"
+    src: "/dev/nvme{{ item }}n1"
+    fstype: xfs
+    state: mounted
+  become: yes

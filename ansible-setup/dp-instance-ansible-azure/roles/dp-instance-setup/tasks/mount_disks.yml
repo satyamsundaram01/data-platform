@@ -1,0 +1,55 @@
+- name: "Check data directory exists: disk: {{ item }}"
+  stat:
+    path: "/data/kafka-data{{ item }}"
+  become: yes
+  register: data_directory_check
+
+- name: "Finding  Disk : {{ item }}"
+  shell: lsblk -o NAME,HCTL,SIZE,MOUNTPOINT | grep -e "\d*:\d*:\d*:{{ item }}" -P | awk -F' ' '{print $1}'
+  register: disk_name
+  when: data_directory_check.stat.exists == false
+
+- name: "Setting the device name for disk: {{ item }}, {{ disk_name.stdout }}"
+  set_fact:
+    device_name: "/dev/{{ disk_name.stdout }}"
+  when: data_directory_check.stat.exists == false
+
+- name: "Make data directory : disk: {{ item }} and device = {{ device_name }}"
+  file:
+    path: "/data/kafka-data{{ item }}"
+    owner: ubuntu
+    group: ubuntu
+    state: directory
+  become: yes
+  register: created_directories
+  when: data_directory_check.stat.exists == false
+
+- name: "Format filesystem to xfs :  disk: {{ item }} and  device = {{ device_name }}"
+  filesystem:
+    fstype: xfs
+    dev: "{{ device_name }}"
+    force: false
+    resizefs: true
+  become: yes
+  register: formatted_disks
+  when: created_directories.changed
+
+- name: "Get the UUID of the disk: {{ item }} and device = {{ device_name }} "
+  command: blkid -s UUID -o value {{ device_name }}
+  register: disk_uuid
+  when: created_directories.changed
+
+- name: "Mount volumes :  disk: {{ item }} and device = {{ device_name }}"
+  mount:
+    path: "/data/kafka-data{{ item }}"
+    src: "UUID={{ disk_uuid.stdout }}"
+    fstype: xfs
+    state: mounted
+  become: yes
+  when: created_directories.changed
+
+- name: "Ensure the disk: {{ item }} and  device = {{ device_name }} is mounted at the boot time "
+  lineinfile:
+    path: /etc/fstab
+    line: "UUID={{ disk_uuid.stdout }} /data/kafka-data{{ item }} xfs defaults 0 0"
+  when: created_directories.changed

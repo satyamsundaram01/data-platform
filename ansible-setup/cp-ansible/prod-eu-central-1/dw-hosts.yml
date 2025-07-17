@@ -1,0 +1,21 @@
+---
+all:
+  vars:
+    ansible_connection: ssh
+    ansible_user: ubuntu
+    ansible_become: true
+    ansible_ssh_private_key_file: ~/cp-ansible/prod-kafka.pem
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+    jmxexporter_enabled: true
+    kafka_broker_jmxexporter_port: 7071
+    zookeeper_jmxexporter_port: 7071
+    schema_registry_jmxexporter_port: 7071
+    confluent_server_enabled: false
+    schema_registry_custom_properties:
+     kafkastore.bootstrap.servers: kafka-dw.moeinternal.com:9092
+     kafkastore.topic: _schemas.dw
+     schema.registry.group.id: schema-registry-dw
+
+schema_registry:
+  hosts:
+   222.15.3.231:

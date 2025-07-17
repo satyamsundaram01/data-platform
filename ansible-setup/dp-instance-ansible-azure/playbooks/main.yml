@@ -1,0 +1,14 @@
+---
+- hosts: all
+  strategy: free
+  user: ubuntu
+  pre_tasks:
+    - name: update apt
+      raw: apt-get update
+    - name: Install ntp
+      raw: apt-get install -y ntp
+    - action: setup
+  become: yes
+  gather_facts: false
+  roles:
+    - dp-instance-setup

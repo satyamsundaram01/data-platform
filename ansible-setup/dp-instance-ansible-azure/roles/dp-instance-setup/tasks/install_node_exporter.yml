@@ -1,0 +1,7 @@
+- name: Install Node exporter ARM64
+  raw: curl -sSL https://cloudesire.github.io/node-exporter-installer/install.sh | sed 's/amd64/arm64/g' | sed 's/0.16.0/1.0.1/g' | sudo sh
+  when: hostvars[inventory_hostname].ansible_architecture == "aarch64"
+
+- name: Install Node exporter AMD64
+  raw: curl -sSL https://cloudesire.github.io/node-exporter-installer/install.sh | sudo sh
+  when: hostvars[inventory_hostname].ansible_architecture == "x86_64"

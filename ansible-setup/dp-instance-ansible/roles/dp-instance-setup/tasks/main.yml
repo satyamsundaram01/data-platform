@@ -1,0 +1,15 @@
+- name: Install node exporter
+  import_tasks: install_node_exporter.yml
+
+- name: Install easy_ssh
+  import_tasks: easy_ssh_graviton.yml
+
+# - name: Mount Disks
+#   include_tasks: mount_disks.yml
+#   loop: "{{ hostvars[inventory_hostname].disks }}"
+#   when: hostvars[inventory_hostname].mount_disks
+
+- name: Mount Disks
+  include_tasks: mount_disks.yml
+  loop: "{{ hostvars[inventory_hostname].disks | default([]) }}"
+  when: hostvars[inventory_hostname].mount_disks | default(false) | bool

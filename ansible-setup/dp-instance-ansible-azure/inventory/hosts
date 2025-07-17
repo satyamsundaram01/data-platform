@@ -1,0 +1,8 @@
+all:
+    hosts:
+        10.30.0.4:
+    vars:
+        mount_disks: true
+        disks:
+            - 1
+            - 2

@@ -1,0 +1,59 @@
+- name: Configure confluent-zookeeper.service for Restart=always
+  ansible.builtin.lineinfile:
+    path: /lib/systemd/system/confluent-zookeeper.service
+    regexp: '^Restart=.*'
+    line: 'Restart=always'
+    state: present
+  when: "'zookeeper' in group_names"
+  notify:
+    - Reload systemd daemon
+    - Restart confluent-zookeeper service
+
+- name: Configure node-exporter.service for Zookeeper (unit-whitelist)
+  ansible.builtin.lineinfile:
+    path: /lib/systemd/system/node-exporter.service
+    regexp: '^ExecStart=.*'
+    line: 'ExecStart=/opt/node_exporter/node_exporter --collector.systemd --collector.systemd.unit-whitelist=confluent[-].*.service'
+    state: present
+  when: "'zookeeper' in group_names"
+  notify: Restart node-exporter service
+
+- name: Configure confluent-kafka.service for Restart=always
+  ansible.builtin.lineinfile:
+    path: /lib/systemd/system/confluent-kafka.service
+    regexp: '^Restart=.*'
+    line: 'Restart=always'
+    state: present
+  when: "'kafka' in group_names"
+  notify:
+    - Reload systemd daemon
+    - Restart confluent-kafka service
+
+- name: Configure node-exporter.service for Kafka (unit-whitelist)
+  ansible.builtin.lineinfile:
+    path: /lib/systemd/system/node-exporter.service
+    regexp: '^ExecStart=.*'
+    line: 'ExecStart=/opt/node_exporter/node_exporter --collector.systemd --collector.systemd.unit-whitelist=confluent[-].*.service'
+    state: present
+  when: "'kafka' in group_names"
+  notify: Restart node-exporter service
+
+- name: Configure confluent-schema-registry.service for Restart=always
+  ansible.builtin.lineinfile:
+    path: /lib/systemd/system/confluent-schema-registry.service
+    regexp: '^Restart=.*'
+    line: 'Restart=always'
+    state: present
+  when: "'kafka' in group_names and ansible_facts.services['confluent-schema-registry.service'] is defined"
+  notify:
+    - Reload systemd daemon
+    - Restart confluent-schema-registry service
+
+- name: Configure node-exporter.service for Schema Registry (unit-whitelist)
+  ansible.builtin.lineinfile:
+    path: /lib/systemd/system/node-exporter.service
+    regexp: '^ExecStart=.*'
+    line: 'ExecStart=/opt/node_exporter/node_exporter --collector.systemd --collector.systemd.unit-whitelist=confluent[-].*.service'
+    state: present
+  when: "'kafka' in group_names and ansible_facts.services['confluent-schema-registry.service'] is defined"
+  notify: Restart node-exporter service

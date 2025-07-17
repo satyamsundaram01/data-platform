@@ -1,0 +1,71 @@
+---
+all:
+  vars:
+    ansible_connection: ssh
+    ansible_user: ubuntu
+    ansible_become: true
+    ansible_ssh_private_key_file: ~/cp-ansible/prod-kafka.pem
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+    jmxexporter_enabled: true
+    kafka_broker_jmxexporter_port: 7071
+    zookeeper_jmxexporter_port: 7071
+    confluent_server_enabled: false
+    zookeeper_custom_properties:
+      tickTime: 2000
+      initLimit: 5
+      syncLimit: 2
+      dataDir: /var/zookeeper
+      clientPort: 2181
+      admin.serverPort: 8082
+      snapCount: 5000
+      autopurge.snapRetainCount: 10
+      autopurge.purgeInterval: 12
+      maxClientCnxns: 100
+
+    kafka_broker_custom_properties:
+      zookeeper.connect: zookeeper-reports.moeinternal.com:2181/kafka-reports
+      zookeeper.session.timeout.ms: 30000
+      log.dirs: /mnt/data/kafka-data1/topic-data,/mnt/data/kafka-data2/topic-data
+      log.retention.hours: 24
+      log.roll.hours: 2
+      log.segment.bytes: 256000000 
+      log.roll.jitter.ms: 300000
+      log.cleaner.delete.retention.ms: 3600000
+      compression.type: lz4
+      message.max.bytes: 10485760
+      default.replication.factor: 3
+      delete.topic.enable: false
+      auto.create.topics.enable: false
+      num.recovery.threads.per.data.dir: 4
+      num.replica.alter.log.dirs.threads: 1
+      num.partitions: 4
+      offsets.topic.num.partitions: 4
+      transaction.state.log.num.partitions: 4
+      fetch.max.bytes: 10485760
+      replica.fetch.max.bytes: 10485760
+      background.threads: 4
+      num.network.threads: 4
+      num.io.threads: 4
+      num.replica.fetchers: 2
+      min.insync.replicas: 1
+    kafka_broker_service_environment_overrides:
+      KAFKA_HEAP_OPTS: "-Xms1g -Xmx5g"
+      JMX_PORT: 9000
+zookeeper:
+  hosts:
+    222.15.7.178:
+      zookeeper_id: 1
+    222.15.1.66:
+      zookeeper_id: 2
+    222.15.4.62:
+      zookeeper_id: 3
+
+kafka_broker:
+  hosts:
+    222.15.2.118:
+      broker_id: 1
+    222.15.2.196:
+      broker_id: 2
+    222.15.6.216:
+      broker_id: 3
+
