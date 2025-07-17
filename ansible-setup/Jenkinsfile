@@ -30,13 +30,6 @@ pipeline {
                     // git branch: 'main', credentialsId: "'github alice'", url: "git@github.com:satyamsundaram01/${REPO_NAME}.git"
                     // git branch: 'main', credentialsId: /github alice/, url: "git@github.com:satyamsundaram01/${REPO_NAME}.git"
                     git branch: 'main', url: "https://github.com/satyamsundaram01/${REPO_NAME}.git"
-                    pwd()
-                    sh 'pwd'
-                    // how to list files in the workspace
-                    echo "Listing files in workspace:"
-                    sh 'ls -la'
-                    echo "Listing files in ansible-setup directory:"
-                    sh "ls -la ${ANSIBLE_SETUP_ROOT}"
                 }
             }
         }
@@ -47,7 +40,15 @@ pipeline {
                     echo "Installing Python dependencies (boto3, PyYAML) and Ansible on Jenkins agent..."
                     sh '''
                         sudo apt-get update
-                        sudo apt-get install -y python3-pip ansible
+
+                        # Ensure Python 3 and pip3 are installed (apt-get might install an older pip by default)
+                        sudo apt-get install -y python3 python3-pip ansible
+
+                        # IMPORTANT: Upgrade pip3 to a recent version
+                        # Use python3 -m pip to ensure the correct pip for Python 3 is updated
+                        python3 -m pip install --upgrade pip
+
+                        # sudo apt-get install -y python3-pip ansible
                         pip3 install boto3 PyYAML botocore
                     '''
                 }
