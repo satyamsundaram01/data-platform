@@ -6,7 +6,7 @@ pipeline {
     environment {
         // --- Pipeline Parameters (define in Jenkins UI as 'Parameters') ---
         AWS_REGION = "${params.AWS_REGION}" // e.g., 'ap-south-1'
-        CLUSTER_SUBSERVICE_TAG = "${params.CLUSTER_SUBSERVICE_TAG}" // e.g., 'oneshot'
+        SUBSERVICE_NAME = "${params.SUBSERVICE_NAME}" // e.g., 'oneshot'
         // ROUTE53_HOSTED_ZONE_ID will be derived, so it's no longer a direct parameter
 
         // --- Internal Paths and Credentials IDs ---
@@ -22,7 +22,9 @@ pipeline {
             steps {
                 script {
                     echo "Cloning repository: ${env.REPO_NAME} into ${WORKSPACE}"
-                    // git branch: 'main', credentialsId: GITHUB_REPO_CRED_ID, url: "git@github.com:satyamsundaram01/${REPO_NAME}.git"
+                    // git branch: 'main', credentialsId: ${GITHUB_REPO_CRED_ID}, url: "git@github.com:satyamsundaram01/${REPO_NAME}.git"
+                    // git branch: 'main', credentialsId: "'github alice'", url: "git@github.com:satyamsundaram01/${REPO_NAME}.git"
+                    // git branch: 'main', credentialsId: /github alice/, url: "git@github.com:satyamsundaram01/${REPO_NAME}.git"
                     git branch: 'main', url: "https://github.com/satyamsundaram01/${REPO_NAME}.git"
 
                 }
@@ -66,11 +68,11 @@ pipeline {
         stage('Generate Ansible Inventories & Configure AWS Resources') {
             steps {
                 script {
-                    echo "Running automate_inventory.py script..."
+                    echo "Running automate_cluster_configuration.py script..."
                     sh """
-                        python3 ${ANSIBLE_SETUP_ROOT}/scripts/automate_inventory.py \\
+                        python3 ${ANSIBLE_SETUP_ROOT}/scripts/automate_cluster_configuration.py \\
                         --region ${AWS_REGION} \\
-                        --subservice ${CLUSTER_SUBSERVICE_TAG} \\
+                        --subservice ${SUBSERVICE_NAME} \\
                         --hosted-zone-id ${ROUTE53_HOSTED_ZONE_ID} # Pass the derived ID
                     """
                 }
@@ -98,7 +100,7 @@ pipeline {
             steps {
                 script {
                     echo "Running cp-ansible/all.yml for Kafka and Zookeeper installation..."
-                    def cpAnsibleInventoryFile = "${ANSIBLE_SETUP_ROOT}/cp-ansible/staging/${AWS_REGION}/${CLUSTER_SUBSERVICE_TAG}-hosts.yml"
+                    def cpAnsibleInventoryFile = "${ANSIBLE_SETUP_ROOT}/cp-ansible/staging/${AWS_REGION}/${SUBSERVICE_NAME}-hosts.yml"
 
                     withCredentials([sshUserPrivateKey(credentialsId: AWS_EC2_SSH_KEY_CRED_ID, keyFileVariable: 'ANSIBLE_SSH_KEY_FILE')]) {
                         sh """
