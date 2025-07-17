@@ -13,7 +13,7 @@ pipeline {
         REPO_NAME = 'data-platform'
         ANSIBLE_SETUP_ROOT = "${WORKSPACE}/${REPO_NAME}/ansible-setup"
 
-        GITHUB_REPO_CRED_ID = 'github-alice'
+        GITHUB_REPO_CRED_ID = 'github alice'
         AWS_EC2_SSH_KEY_CRED_ID = 'onlyDev'
 
         // --- Dynamic Environment Variables ---
