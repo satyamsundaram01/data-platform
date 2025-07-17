@@ -115,6 +115,8 @@ pipeline {
                     echo "Running dp-instance-ansible/playbooks/initial_setup.yml..."
                     withCredentials([sshUserPrivateKey(credentialsId: AWS_EC2_SSH_KEY_CRED_ID, keyFileVariable: 'ANSIBLE_SSH_KEY_FILE')]) {
                         sh """
+                            cd ${ANSIBLE_SETUP_ROOT}/dp-instance-ansible
+
                             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \\
                             -i ${ANSIBLE_SETUP_ROOT}/dp-instance-ansible/inventory/hosts.ini \\
                             --private-key \$ANSIBLE_SSH_KEY_FILE \\
@@ -134,6 +136,8 @@ pipeline {
 
                     withCredentials([sshUserPrivateKey(credentialsId: AWS_EC2_SSH_KEY_CRED_ID, keyFileVariable: 'ANSIBLE_SSH_KEY_FILE')]) {
                         sh """
+                            cd ${ANSIBLE_SETUP_ROOT}/cp-ansible
+
                             echo "Running cp-ansible for Zookeeper..."
                             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \\
                             -i ${cpAnsibleInventoryFile} \\
@@ -166,6 +170,8 @@ pipeline {
                     echo "Running dp-instance-ansible/playbooks/post_confluent_config.yml..."
                     withCredentials([sshUserPrivateKey(credentialsId: AWS_EC2_SSH_KEY_CRED_ID, keyFileVariable: 'ANSIBLE_SSH_KEY_FILE')]) {
                         sh """
+                            cd ${ANSIBLE_SETUP_ROOT}/dp-instance-ansible
+
                             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \\
                             -i ${ANSIBLE_SETUP_ROOT}/dp-instance-ansible/inventory/hosts.ini \\
                             --private-key \$ANSIBLE_SSH_KEY_FILE \\
