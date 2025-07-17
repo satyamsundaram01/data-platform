@@ -5,8 +5,8 @@ pipeline {
 
     environment {
         // --- Pipeline Parameters (define in Jenkins UI as 'Parameters') ---
-        AWS_REGION = params.AWS_REGION // e.g., 'ap-south-1'
-        CLUSTER_SUBSERVICE_TAG = params.CLUSTER_SUBSERVICE_TAG // e.g., 'oneshot'
+        AWS_REGION = "${params.AWS_REGION}" // e.g., 'ap-south-1'
+        CLUSTER_SUBSERVICE_TAG = "${params.CLUSTER_SUBSERVICE_TAG}" // e.g., 'oneshot'
         // ROUTE53_HOSTED_ZONE_ID will be derived, so it's no longer a direct parameter
 
         // --- Internal Paths and Credentials IDs ---
