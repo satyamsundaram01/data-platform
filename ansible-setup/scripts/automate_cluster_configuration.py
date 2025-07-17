@@ -284,6 +284,7 @@ class ClusterInventoryGenerator:
                 if inst['name']:
                     # Regex to extract the pattern like 'oneshot-2' from 'staging-dataplatform-kafka-oneshot-2'
                     # More robust regex to handle various prefixes, looking for the <subservice>-<number> suffix
+                    # todo: sep('-kafka-')[1] to get the subservice name if cluster_name has multiple words
                     match = re.search(rf'[-_]?{re.escape(self.subservice)}-(\d+)$', inst['name'])
                     if match:
                         node_id_value = f"{self.subservice}-{match.group(1)}"
@@ -335,7 +336,7 @@ class ClusterInventoryGenerator:
             self.generate_dp_ansible_inventory()
             self.generate_cp_ansible_hosts_file()
             # self.create_route53_dns_records()
-            self.tag_ec2_instances()
+            # self.tag_ec2_instances()
             print("\nAutomation completed successfully!")
         except Exception as e:
             print(f"\nFATAL ERROR during automation: {e}")

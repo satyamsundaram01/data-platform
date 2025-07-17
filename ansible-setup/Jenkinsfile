@@ -43,6 +43,20 @@ pipeline {
                         sudo apt-get update
                         sudo apt-get install -y python3-pip ansible
                         pip3 install boto3 PyYAML botocore
+
+                        # --- VERIFICATION STEPS (crucial for debugging in Jenkins logs) ---
+                        echo "--- Python/Pip/Ansible Version Verification ---"
+                        echo "python3 executable path:"
+                        which python3
+                        echo "pip3 executable path:"
+                        which pip3
+                        echo "python3 version:"
+                        python3 --version
+                        echo "pip3 version:"
+                        pip3 --version
+                        echo "ansible version:"
+                        ansible --version # This should now succeed and show Ansible running with Python 3.8.x
+                        echo "--- End Verification ---"
                     '''
                 }
             }
