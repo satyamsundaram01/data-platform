@@ -13,8 +13,8 @@ pipeline {
         REPO_NAME = 'data-platform'
         ANSIBLE_SETUP_ROOT = "${WORKSPACE}/${REPO_NAME}/ansible-setup"
 
-        GITHUB_REPO_CRED_ID = 'your-github-repo-credential-id'
-        AWS_EC2_SSH_KEY_CRED_ID = 'aws-ec2-ssh-key'
+        GITHUB_REPO_CRED_ID = 'github-alice'
+        AWS_EC2_SSH_KEY_CRED_ID = 'onlyDev'
 
         // --- Dynamic Environment Variables ---
         // Placeholder for the dynamically determined Hosted Zone ID
@@ -26,7 +26,7 @@ pipeline {
             steps {
                 script {
                     echo "Cloning repository: ${env.REPO_NAME} into ${WORKSPACE}"
-                    git branch: 'main', credentialsId: GITHUB_REPO_CRED_ID, url: "git@github.com:moengage/${REPO_NAME}.git"
+                    git branch: 'main', credentialsId: GITHUB_REPO_CRED_ID, url: "git@github.com:satyamsundaram01/${REPO_NAME}.git"
                 }
             }
         }
@@ -48,10 +48,10 @@ pipeline {
             steps {
                 script {
                     def hostedZoneMap = [
-                        'us-east-1': 'euqwuei32r329',
-                        'us-east-2': 'jkhdr328r2921j',
-                        'ap-south-1': '2h3yr282fyv22',
-                        'eu-central-1': 'kehf23y892yv2v2'
+                        'us-east-1': 'Z02747281NCEKDCVRYI6O',
+                        'us-east-2': 'Z02747281NCEKDCVRYI6O',
+                        'ap-south-1': 'Z02747281NCEKDCVRYI6O',
+                        'eu-central-1': 'Z02747281NCEKDCVRYI6O'
                     ]
 
                     if (hostedZoneMap.containsKey(env.AWS_REGION)) {
