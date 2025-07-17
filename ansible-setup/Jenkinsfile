@@ -3,6 +3,7 @@
 pipeline {
     // agent any
     agent {
+        // label 'slave_moe_repo'
         label 'moe-dc01-spot-fleet'
     }
 
@@ -50,11 +51,15 @@ pipeline {
         stage('Determine Route 53 Hosted Zone ID') {
             steps {
                 script {
+                    // def hostedZoneMap = [
+                    //     'ap-south-1': 'Z02747281NCEKDCVRYI6O'
+                    // ]
+
                     def hostedZoneMap = [
-                        'us-east-1': 'Z02747281NCEKDCVRYI6O',
-                        'us-east-2': 'Z02747281NCEKDCVRYI6O',
-                        'ap-south-1': 'Z02747281NCEKDCVRYI6O',
-                        'eu-central-1': 'Z02747281NCEKDCVRYI6O'
+                        'us-east-1': 'Z01548092OW3KNIV40FZL',
+                        'us-east-2': 'Z08696801XPRDANUIKMZF',
+                        'ap-south-1': 'Z08297562AUE688TCIG5S',
+                        'eu-central-1': 'Z0155169225BE34WSFJB1'
                     ]
 
                     if (hostedZoneMap.containsKey(env.AWS_REGION)) {
@@ -92,7 +97,7 @@ pipeline {
                             -i ${ANSIBLE_SETUP_ROOT}/dp-instance-ansible/inventory/hosts.ini \\
                             --private-key \$ANSIBLE_SSH_KEY_FILE \\
                             ${ANSIBLE_SETUP_ROOT}/dp-instance-ansible/playbooks/initial_setup.yml \\
-                            --limit all
+                            --limit all --check --diff
                         """
                     }
                 }
@@ -103,7 +108,7 @@ pipeline {
             steps {
                 script {
                     echo "Running cp-ansible/all.yml for Kafka and Zookeeper installation..."
-                    def cpAnsibleInventoryFile = "${ANSIBLE_SETUP_ROOT}/cp-ansible/staging/${AWS_REGION}/${SUBSERVICE_NAME}-hosts.yml"
+                    def cpAnsibleInventoryFile = "${ANSIBLE_SETUP_ROOT}/cp-ansible/prod-${AWS_REGION}/${SUBSERVICE_NAME}-hosts.yml"
 
                     withCredentials([sshUserPrivateKey(credentialsId: AWS_EC2_SSH_KEY_CRED_ID, keyFileVariable: 'ANSIBLE_SSH_KEY_FILE')]) {
                         sh """
@@ -112,21 +117,21 @@ pipeline {
                             -i ${cpAnsibleInventoryFile} \\
                             --private-key \$ANSIBLE_SSH_KEY_FILE \\
                             ${ANSIBLE_SETUP_ROOT}/cp-ansible/all.yml \\
-                            --tags=zookeeper -e deployment_strategy=parallel
+                            --tags=zookeeper -e deployment_strategy=parallel --check --diff
 
                             echo "Running cp-ansible for Kafka Broker..."
                             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \\
                             -i ${cpAnsibleInventoryFile} \\
                             --private-key \$ANSIBLE_SSH_KEY_FILE \\
                             ${ANSIBLE_SETUP_ROOT}/cp-ansible/all.yml \\
-                            --tags=kafka_broker -e deployment_strategy=parallel
+                            --tags=kafka_broker -e deployment_strategy=parallel --check --diff
 
                             echo "Running cp-ansible for Schema Registry (if applicable)..."
                             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \\
                             -i ${cpAnsibleInventoryFile} \\
                             --private-key \$ANSIBLE_SSH_KEY_FILE \\
                             ${ANSIBLE_SETUP_ROOT}/cp-ansible/all.yml \\
-                            --tags=schema_registry -e deployment_strategy=parallel
+                            --tags=schema_registry -e deployment_strategy=parallel --check --diff
                         """
                     }
                 }
@@ -143,7 +148,7 @@ pipeline {
                             -i ${ANSIBLE_SETUP_ROOT}/dp-instance-ansible/inventory/hosts.ini \\
                             --private-key \$ANSIBLE_SSH_KEY_FILE \\
                             ${ANSIBLE_SETUP_ROOT}/dp-instance-ansible/playbooks/post_confluent_config.yml \\
-                            --limit all
+                            --limit all --check --diff
                         """
                     }
                 }

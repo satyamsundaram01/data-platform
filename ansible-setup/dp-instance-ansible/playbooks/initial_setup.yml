@@ -19,7 +19,7 @@
   strategy: free
   user: ubuntu # Ensure this matches your ansible_user
   become: true
-  gather_facts: false # Facts will be gathered explicitly if needed
+  gather_facts: true # Facts will be gathered explicitly if needed
 
   pre_tasks:
     - name: Ensure apt cache is updated
@@ -37,10 +37,6 @@
         name: ntp
         state: started
         enabled: yes
-
-    - name: Gather facts for service checks (needed for schema registry condition later)
-      ansible.builtin.setup:
-        filter: "ansible_services" # Gather only service facts for efficiency
     
   roles:
     - dp-instance-setup

@@ -16,13 +16,13 @@ NUM_KAFKA_DISKS_PER_INSTANCE = 2
 KAFKA_MOUNT_PATH = '/mnt/data/kafka-data'
 KAFKA_DISK_SUFFIX = '1,2' # For hosts.ini "disks" variable, matches NUM_KAFKA_DISKS_PER_INSTANCE
 
-# Default Ansible user and interpreter for dp-instance-ansible
-ANSIBLE_DP_USER = 'ec2-user'
-ANSIBLE_DP_PYTHON_INTERPRETER = '/usr/bin/python3'
+# # Default Ansible user and interpreter for dp-instance-ansible
+# ANSIBLE_DP_USER = 'ec2-user'
+# ANSIBLE_DP_PYTHON_INTERPRETER = '/usr/bin/python3'
 
 # cp-ansible specific configurations
 CP_ANSIBLE_USER = 'ubuntu'
-CP_ANSIBLE_SSH_KEY_PATH = '~/.ssh/onlyDev.pem' # Consider overriding this in Jenkins
+# CP_ANSIBLE_SSH_KEY_PATH = '~/.ssh/onlyDev.pem' # Consider overriding this in Jenkins
 CP_ANSIBLE_SSH_COMMON_ARGS = '-o StrictHostKeyChecking=no'
 CP_ANSIBLE_JMX_PORT = 7071
 CP_ANSIBLE_HEAP_OPTS = "-Xms1g -Xmx4g"
@@ -66,7 +66,7 @@ class ClusterInventoryGenerator:
 
         # Paths for generated files
         self.dp_inventory_path = os.path.join(self.base_ansible_setup_dir, 'dp-instance-ansible', 'inventory', 'hosts.ini')
-        self.cp_ansible_env_dir = os.path.join(self.base_ansible_setup_dir, 'cp-ansible', 'staging', self.region)
+        self.cp_ansible_env_dir = os.path.join(self.base_ansible_setup_dir, 'cp-ansible', f"prod-{self.region}")
         self.cp_ansible_hosts_path = os.path.join(self.cp_ansible_env_dir, f"{self.subservice}-hosts.yml")
 
 
@@ -142,9 +142,9 @@ class ClusterInventoryGenerator:
             if self.zookeeper_instances:
                 f.write("".join([f"{inst['ip']} mount_disks=false\n" for inst in self.zookeeper_instances]))
             
-            f.write(f"\n[all:vars]\n")
-            f.write(f"ansible_user={ANSIBLE_DP_USER}\n")
-            f.write(f"ansible_python_interpreter={ANSIBLE_DP_PYTHON_INTERPRETER}\n")
+            # f.write(f"\n[all:vars]\n")
+            # f.write(f"ansible_user={ANSIBLE_DP_USER}\n")
+            # f.write(f"ansible_python_interpreter={ANSIBLE_DP_PYTHON_INTERPRETER}\n")
 
         print(f"Ansible dp-instance-ansible inventory generated at: {self.dp_inventory_path}")
 
@@ -163,7 +163,7 @@ class ClusterInventoryGenerator:
                     'ansible_connection': 'ssh',
                     'ansible_user': CP_ANSIBLE_USER,
                     'ansible_become': True,
-                    'ansible_ssh_private_key_file': CP_ANSIBLE_SSH_KEY_PATH,
+                    # 'ansible_ssh_private_key_file': CP_ANSIBLE_SSH_KEY_PATH,
                     'ansible_ssh_common_args': CP_ANSIBLE_SSH_COMMON_ARGS,
                     'jmxexporter_enabled': True,
                     'kafka_broker_jmxexporter_port': CP_ANSIBLE_JMX_PORT,
